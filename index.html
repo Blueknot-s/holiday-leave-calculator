@@ -11,8 +11,8 @@
     .box { background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 20px; margin-top: 20px; }
     .highlight { color: #d9534f; font-weight: bold; }
     .card { background: #fcfcfc; border-left: 5px solid #2ecc71; margin-bottom: 10px; padding: 15px; border-radius: 6px; }
-    .copy-btn, .share-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    .copy-btn:hover, .share-btn:hover { background: #2c80b4; }
+    .copy-btn, .share-btn, .calendar-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;}
+    .copy-btn:hover, .share-btn:hover, .calendar-btn:hover { background: #2c80b4; }
     table.calendar { width: 100%; border-collapse: collapse; margin-top: 20px; }
     table.calendar th, table.calendar td { width: 14%; border: 1px solid #ccc; padding: 10px; text-align: center; }
     .holiday { background-color: #85C1E9; }
@@ -42,6 +42,7 @@
 
   <div class="box" id="resultBox"></div>
   <div class="box" id="calendarBox"></div>
+  <div class="box" id="summaryBox"></div>
 
   <script>
     const yearSelect = document.getElementById("year");
@@ -50,6 +51,9 @@
     const totalLeaveInput = document.getElementById("totalLeave");
     const resultBox = document.getElementById("resultBox");
     const calendarBox = document.getElementById("calendarBox");
+    const summaryBox = document.getElementById("summaryBox");
+
+    let suggestions = [];
 
     for (let y = 2024; y <= 2030; y++) {
       yearSelect.innerHTML += `<option value="${y}">${y}년</option>`;
@@ -61,11 +65,13 @@
     function calculateDays() {
       resultBox.innerHTML = '';
       calendarBox.innerHTML = '';
+      summaryBox.innerHTML = '';
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const leaveDays = parseInt(leaveDaysSelect.value);
       const totalLeave = parseInt(totalLeaveInput.value);
 
+      suggestions = [];
       let holidays = [];
       let current = new Date(year, month > 0 ? month - 1 : 0, 1);
       const end = new Date(year, month > 0 ? month : 12, 0);
@@ -82,22 +88,19 @@
         return;
       }
 
-      let suggestions = holidays.map(date => {
+      holidays.forEach(date => {
         const before = new Date(date);
         before.setDate(before.getDate() - 1);
-        const after = new Date(date);
-        after.setDate(after.getDate() + 1);
-        return {
-          period: `${before.toLocaleDateString()} ~ ${after.toLocaleDateString()}`,
+        suggestions.push({
+          period: `${before.toLocaleDateString()} ~ ${date.toLocaleDateString()}`,
           totalDays: 3,
           requiredLeave: 1,
-          leaveDate: before.toLocaleDateString()
-        };
+          leaveDate: before.toLocaleDateString(),
+          usedLeave: 1
+        });
       });
 
-      suggestions = suggestions.filter(s => s.requiredLeave === leaveDays && s.requiredLeave <= totalLeave);
-
-      suggestions.sort((a, b) => b.totalDays - a.totalDays);
+      suggestions = suggestions.filter(s => s.requiredLeave <= leaveDays && s.requiredLeave <= totalLeave);
 
       suggestions.forEach((s, idx) => {
         resultBox.innerHTML += `
@@ -106,13 +109,20 @@
             📅 기간: ${s.period}<br>
             🛌 쉬는 일수: ${s.totalDays}일<br>
             📝 필요한 연차: ${s.requiredLeave}일<br>
+            <button class="calendar-btn" onclick="selectSuggestion(${idx})">달력에 표시</button>
             <button class="copy-btn" onclick="copyText('${s.period} | 쉬는 일수 ${s.totalDays}일 | 연차 ${s.requiredLeave}일')">복사하기</button>
             <button class="share-btn" onclick="shareText('${s.period} | 쉬는 일수 ${s.totalDays}일 | 연차 ${s.requiredLeave}일')">공유하기</button>
           </div>
         `;
       });
+    }
 
-      drawCalendar(year, month, suggestions);
+    function selectSuggestion(index) {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      drawCalendar(year, month, suggestions[index].leaveDate);
+      const totalLeave = parseInt(totalLeaveInput.value);
+      summaryBox.innerHTML = `<p>✅ 사용 연차: ${suggestions[index].usedLeave}일 | 🧮 남은 연차: ${totalLeave - suggestions[index].usedLeave}일</p>`;
     }
 
     function copyText(text) {
@@ -133,7 +143,7 @@
       }
     }
 
-    function drawCalendar(year, month, suggestions) {
+    function drawCalendar(year, month, selectedLeaveDate) {
       if (month === 0) return;
       const firstDay = new Date(year, month - 1, 1).getDay();
       const daysInMonth = new Date(year, month, 0).getDate();
@@ -142,9 +152,9 @@
       for (let i = 0; i < firstDay; i++) html += '<td></td>';
       while (day <= daysInMonth) {
         if ((firstDay + day - 1) % 7 === 0) html += '</tr><tr>';
-        const dateString = `${year}/${month}/${day}`;
+        const dateString = `${year}.${month}.${day}`;
         let className = '';
-        if (suggestions.some(s => s.leaveDate === dateString)) {
+        if (selectedLeaveDate === dateString) {
           className = 'leave';
         }
         html += `<td class="${className}">${day}</td>`;
