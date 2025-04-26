@@ -12,10 +12,7 @@
     .copy-btn, .share-btn, .next-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
     .copy-btn:hover, .share-btn:hover, .next-btn:hover { background: #2c80b4; }
     table.calendar { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    table.calendar th, table.calendar td { width: 14%; border: 1px solid #ccc; padding: 8px; text-align: center; }
-    table.calendar td { color: black; }
-    .leave { color: red; font-weight: bold; }
-    .calendar th { color: black; }
+    table.calendar th, table.calendar td { width: 14%; border: 1px solid #ccc; padding: 8px; text-align: center; color: black; }
     .calendar th:first-child { color: red; }
     .calendar th:last-child { color: blue; }
     .notice { font-size: 0.9em; color: #888; margin: 10px 0; }
@@ -163,9 +160,9 @@
         const currentDate = new Date(year, month - 1, day);
 
         if (currentDate >= suggestion.leaveStart && currentDate <= suggestion.leaveEnd) {
-          html += `<td><span class="leave">${day}</span></td>`; // 추천 날짜만 빨간 숫자
+          html += `<td>★${day}</td>`;
         } else {
-          html += `<td>${day}</td>`; // 기본 검정 숫자
+          html += `<td>${day}</td>`;
         }
         day++;
       }
