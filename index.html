@@ -13,8 +13,9 @@
     .copy-btn:hover, .share-btn:hover, .next-btn:hover { background: #2c80b4; }
     table.calendar { width: 100%; border-collapse: collapse; margin-top: 10px; }
     table.calendar th, table.calendar td { width: 14%; border: 1px solid #ccc; padding: 8px; text-align: center; }
-    .holiday { background-color: #FF6B6B; }
-    .leave { background-color: #4DA3FF; }
+    .calendar th:first-child { color: red; } /* 일요일 */
+    .calendar th:last-child { color: blue; } /* 토요일 */
+    .leave { background-color: #e0f0ff; } /* 추천 쉬는날 연한 파랑 배경 */
     .notice { font-size: 0.9em; color: #888; margin: 10px 0; }
   </style>
 </head>
@@ -50,10 +51,6 @@
 
     let suggestions = [];
     let suggestionIndex = 0;
-
-    const holidaysFixed = [
-      "1/1", "3/1", "5/1", "5/5", "6/6", "8/15", "10/3", "10/9", "12/25"
-    ];
 
     for (let y = 2024; y <= 2030; y++) {
       yearSelect.innerHTML += `<option value="${y}">${y}년</option>`;
@@ -162,18 +159,9 @@
       while (day <= daysInMonth) {
         if ((firstDay + day - 1) % 7 === 0) html += '</tr><tr>';
         const currentDate = new Date(year, month - 1, day);
-        const dateString = `${currentDate.getMonth() + 1}/${currentDate.getDate()}`;
-        let className = '';
 
-        if (currentDate.getDay() === 0 || currentDate.getDay() === 6 || holidaysFixed.includes(dateString)) {
-          className = 'holiday';
-        } else if (
-          currentDate >= suggestion.leaveStart &&
-          currentDate <= suggestion.leaveEnd &&
-          currentDate.getDay() !== 0 &&
-          currentDate.getDay() !== 6 &&
-          !holidaysFixed.includes(dateString)
-        ) {
+        let className = '';
+        if (currentDate >= suggestion.leaveStart && currentDate <= suggestion.leaveEnd) {
           className = 'leave';
         }
 
