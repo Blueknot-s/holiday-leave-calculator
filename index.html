@@ -9,17 +9,17 @@
     select, button, input { padding: 10px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
     .box { background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 20px; margin-top: 20px; }
     .card { background: #fcfcfc; border-left: 5px solid #2ecc71; margin-bottom: 10px; padding: 15px; border-radius: 6px; }
-    .copy-btn, .share-btn, .calendar-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
-    .copy-btn:hover, .share-btn:hover, .calendar-btn:hover { background: #2c80b4; }
+    .copy-btn, .share-btn, .next-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
+    .copy-btn:hover, .share-btn:hover, .next-btn:hover { background: #2c80b4; }
     table.calendar { width: 100%; border-collapse: collapse; margin-top: 20px; }
     table.calendar th, table.calendar td { width: 14%; border: 1px solid #ccc; padding: 10px; text-align: center; }
-    .holiday { background-color: #FF6B6B; }
-    .leave { background-color: #4DA3FF; }
+    .holiday { background-color: #FF6B6B; } /* 주말, 공휴일 */
+    .leave { background-color: #4DA3FF; } /* 연차 사용 */
   </style>
 </head>
 <body>
   <h1>2025 직장인 필수 툴 | 최장 연휴 시뮬레이터</h1>
-  <p>공휴일과 주말을 조합하여 최장 연휴를 만드는 연차 전략을 추천합니다!</p>
+  <p>공휴일과 주말을 포함하여 최장 연휴를 만드는 연차 전략을 추천합니다!</p>
 
   <div class="box">
     <label>연도:</label>
@@ -35,7 +35,7 @@
     </select>
     <label>보유 연차:</label>
     <input type="number" id="totalLeave" value="15" min="1" max="30">
-    <button onclick="calculateDays()">최장 연휴 계산하기</button>
+    <button onclick="prepareSuggestions()">추천 준비</button>
   </div>
 
   <div class="box" id="resultBox"></div>
@@ -52,6 +52,7 @@
     const summaryBox = document.getElementById("summaryBox");
 
     let suggestions = [];
+    let suggestionIndex = 0;
 
     for (let y = 2024; y <= 2030; y++) {
       yearSelect.innerHTML += `<option value="${y}">${y}년</option>`;
@@ -60,16 +61,19 @@
       monthSelect.innerHTML += `<option value="${m}">${m}월</option>`;
     }
 
-    function calculateDays() {
+    function prepareSuggestions() {
       resultBox.innerHTML = '';
       calendarBox.innerHTML = '';
       summaryBox.innerHTML = '';
+
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const leaveDays = parseInt(leaveDaysSelect.value);
       const totalLeave = parseInt(totalLeaveInput.value);
 
       suggestions = [];
+      suggestionIndex = 0;
+
       let current = new Date(year, month > 0 ? month - 1 : 0, 1);
       const end = new Date(year, month > 0 ? month : 12, 0);
 
@@ -91,25 +95,41 @@
 
       suggestions = suggestions.filter(s => s.requiredLeave <= leaveDays && s.requiredLeave <= totalLeave);
 
-      suggestions.forEach((s, idx) => {
-        resultBox.innerHTML += `
-          <div class="card">
-            <b>추천 ${idx + 1}:</b><br>
-            📅 기간: ${s.period}<br>
-            🛌 쉬는 일수: ${s.totalDays}일<br>
-            📝 필요한 연차: ${s.requiredLeave}일<br>
-            <button class="calendar-btn" onclick="selectSuggestion(${idx})">달력에 표시</button>
-            <button class="copy-btn" onclick="copyText('${s.period} | 쉬는 일수 ${s.totalDays}일 | 연차 ${s.requiredLeave}일')">복사하기</button>
-            <button class="share-btn" onclick="shareText('${s.period} | 쉬는 일수 ${s.totalDays}일 | 연차 ${s.requiredLeave}일')">공유하기</button>
-          </div>
-        `;
-      });
+      if (suggestions.length > 0) {
+        showSuggestion();
+      } else {
+        resultBox.innerHTML = '<p>추천할 일정이 없습니다.</p>';
+      }
     }
 
-    function selectSuggestion(index) {
-      drawCalendar(suggestions[index]);
+    function showSuggestion() {
+      if (suggestionIndex >= suggestions.length) {
+        resultBox.innerHTML = '<p>모든 추천 일정을 확인했습니다!</p>';
+        return;
+      }
+
+      const s = suggestions[suggestionIndex];
+      resultBox.innerHTML = `
+        <div class="card">
+          <b>추천 ${suggestionIndex + 1}:</b><br>
+          📅 기간: ${s.period}<br>
+          🛌 쉬는 일수: ${s.totalDays}일<br>
+          📝 필요한 연차: ${s.requiredLeave}일<br>
+          <button class="copy-btn" onclick="copyText('${s.period}')">복사하기</button>
+          <button class="share-btn" onclick="shareText('${s.period}')">공유하기</button>
+          <button class="next-btn" onclick="nextSuggestion()">다음 추천</button>
+        </div>
+      `;
+
+      drawCalendar(s);
+
       const totalLeave = parseInt(totalLeaveInput.value);
-      summaryBox.innerHTML = `<p>✅ 사용 연차: ${suggestions[index].usedLeave}일 | 🧮 남은 연차: ${totalLeave - suggestions[index].usedLeave}일</p>`;
+      summaryBox.innerHTML = `<p>✅ 사용 연차: ${s.usedLeave}일 | 🧮 남은 연차: ${totalLeave - s.usedLeave}일</p>`;
+    }
+
+    function nextSuggestion() {
+      suggestionIndex++;
+      showSuggestion();
     }
 
     function copyText(text) {
@@ -131,10 +151,10 @@
     }
 
     function drawCalendar(suggestion) {
-      calendarBox.innerHTML = ''; // 🔥 달력 완전 리셋
+      calendarBox.innerHTML = '';
 
       const year = suggestion.leaveStart.getFullYear();
-      const month = suggestion.leaveStart.getMonth() + 1; // 0-index 보정
+      const month = suggestion.leaveStart.getMonth() + 1;
       const firstDay = new Date(year, month - 1, 1).getDay();
       const daysInMonth = new Date(year, month, 0).getDate();
 
@@ -146,10 +166,11 @@
         if ((firstDay + day - 1) % 7 === 0) html += '</tr><tr>';
         const currentDate = new Date(year, month - 1, day);
         let className = '';
+        if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+          className = 'holiday'; // 기본 주말 빨간색
+        }
         if (currentDate >= suggestion.leaveStart && currentDate <= suggestion.leaveEnd) {
-          if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
-            className = 'holiday'; // 쉬는 날
-          } else {
+          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
             className = 'leave'; // 연차 사용
           }
         }
@@ -157,8 +178,7 @@
         day++;
       }
       html += '</tr></table>';
-
-      calendarBox.innerHTML = html; // 🔥 새 테이블만 삽입
+      calendarBox.innerHTML = html;
     }
   </script>
 </body>
