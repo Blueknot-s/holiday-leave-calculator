@@ -110,7 +110,12 @@
     function selectSuggestion(index) {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
+
+      // ✅ 선택할 때마다 기존 달력 초기화
+      calendarBox.innerHTML = '';
+
       drawCalendar(year, month, suggestions[index]);
+
       const totalLeave = parseInt(totalLeaveInput.value);
       summaryBox.innerHTML = `<p>✅ 사용 연차: ${suggestions[index].usedLeave}일 | 🧮 남은 연차: ${totalLeave - suggestions[index].usedLeave}일</p>`;
     }
@@ -146,9 +151,9 @@
         let className = '';
         if (currentDate >= suggestion.leaveStart && currentDate <= suggestion.leaveEnd) {
           if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
-            className = 'holiday'; // 쉬는 날
+            className = 'holiday'; // 쉬는 날 (빨간색)
           } else {
-            className = 'leave'; // 연차 사용
+            className = 'leave'; // 연차 사용 (파란색)
           }
         }
         html += `<td class="${className}">${day}</td>`;
