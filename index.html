@@ -13,8 +13,8 @@
     .copy-btn:hover, .share-btn:hover, .next-btn:hover { background: #2c80b4; }
     table.calendar { width: 100%; border-collapse: collapse; margin-top: 10px; }
     table.calendar th, table.calendar td { width: 14%; border: 1px solid #ccc; padding: 8px; text-align: center; }
-    .holiday { background-color: #FF6B6B; } /* 주말, 공휴일 */
-    .leave { background-color: #4DA3FF; } /* 연차 사용 */
+    .holiday { background-color: #FF6B6B; }
+    .leave { background-color: #4DA3FF; }
     .notice { font-size: 0.9em; color: #888; margin: 10px 0; }
   </style>
 </head>
@@ -79,14 +79,18 @@
         if (current.getDay() === 0 || current.getDay() === 6) {
           const before = new Date(current);
           before.setDate(before.getDate() - leaveDays);
-          suggestions.push({
-            period: `${before.toLocaleDateString()} ~ ${current.toLocaleDateString()}`,
-            totalDays: leaveDays + 2,
-            requiredLeave: leaveDays,
-            leaveStart: before,
-            leaveEnd: current,
-            usedLeave: leaveDays
-          });
+          const startMonth = before.getMonth() + 1;
+          const endMonth = current.getMonth() + 1;
+          if (startMonth === month && endMonth === month) {
+            suggestions.push({
+              period: `${before.toLocaleDateString()} ~ ${current.toLocaleDateString()}`,
+              totalDays: leaveDays + 2,
+              requiredLeave: leaveDays,
+              leaveStart: before,
+              leaveEnd: current,
+              usedLeave: leaveDays
+            });
+          }
         }
         current.setDate(current.getDate() + 1);
       }
@@ -158,14 +162,21 @@
       while (day <= daysInMonth) {
         if ((firstDay + day - 1) % 7 === 0) html += '</tr><tr>';
         const currentDate = new Date(year, month - 1, day);
-        let dateString = `${currentDate.getMonth() + 1}/${currentDate.getDate()}`;
-
+        const dateString = `${currentDate.getMonth() + 1}/${currentDate.getDate()}`;
         let className = '';
+
         if (currentDate.getDay() === 0 || currentDate.getDay() === 6 || holidaysFixed.includes(dateString)) {
-          className = 'holiday'; // 주말, 공휴일 빨간색
-        } else if (currentDate >= suggestion.leaveStart && currentDate <= suggestion.leaveEnd) {
-          className = 'leave'; // 추천 일정(연차 사용) 파란색
+          className = 'holiday';
+        } else if (
+          currentDate >= suggestion.leaveStart &&
+          currentDate <= suggestion.leaveEnd &&
+          currentDate.getDay() !== 0 &&
+          currentDate.getDay() !== 6 &&
+          !holidaysFixed.includes(dateString)
+        ) {
+          className = 'leave';
         }
+
         html += `<td class="${className}">${day}</td>`;
         day++;
       }
