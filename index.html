@@ -13,9 +13,11 @@
     .copy-btn:hover, .share-btn:hover, .next-btn:hover { background: #2c80b4; }
     table.calendar { width: 100%; border-collapse: collapse; margin-top: 10px; }
     table.calendar th, table.calendar td { width: 14%; border: 1px solid #ccc; padding: 8px; text-align: center; }
-    .calendar th:first-child { color: red; } /* 일요일 */
-    .calendar th:last-child { color: blue; } /* 토요일 */
-    .leave { color: red; font-weight: bold; background: none; } /* 추천 쉬는날 숫자만 빨간색 */
+    table.calendar th { color: black; }
+    table.calendar th:first-child { color: red; } /* 일요일 요일 제목 빨간색 */
+    table.calendar th:last-child { color: blue; } /* 토요일 요일 제목 파란색 */
+    table.calendar td { color: black; } /* 기본 숫자 검정색 */
+    .leave { color: red; font-weight: bold; } /* 추천 쉬는 날짜 숫자 빨간색 */
     .notice { font-size: 0.9em; color: #888; margin: 10px 0; }
   </style>
 </head>
@@ -162,7 +164,7 @@
 
         let className = '';
         if (currentDate >= suggestion.leaveStart && currentDate <= suggestion.leaveEnd) {
-          className = 'leave'; // 쉬는날은 숫자 빨강
+          className = 'leave';
         }
 
         html += `<td class="${className}">${day}</td>`;
