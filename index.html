@@ -11,15 +11,16 @@
     .card { background: #fcfcfc; border-left: 5px solid #2ecc71; margin-bottom: 10px; padding: 15px; border-radius: 6px; }
     .copy-btn, .share-btn, .next-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
     .copy-btn:hover, .share-btn:hover, .next-btn:hover { background: #2c80b4; }
-    table.calendar { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    table.calendar th, table.calendar td { width: 14%; border: 1px solid #ccc; padding: 10px; text-align: center; }
+    table.calendar { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    table.calendar th, table.calendar td { width: 14%; border: 1px solid #ccc; padding: 8px; text-align: center; }
     .holiday { background-color: #FF6B6B; } /* 주말, 공휴일 */
     .leave { background-color: #4DA3FF; } /* 연차 사용 */
+    .notice { font-size: 0.9em; color: #888; margin-bottom: 5px; }
   </style>
 </head>
 <body>
   <h1>2025 직장인 필수 툴 | 최장 연휴 시뮬레이터</h1>
-  <p>공휴일과 주말을 포함하여 최장 연휴를 만드는 연차 전략을 추천합니다!</p>
+  <p>공휴일과 주말을 조합하여 최장 연휴를 만드는 연차 전략을 추천합니다!</p>
 
   <div class="box">
     <label>연도:</label>
@@ -35,12 +36,10 @@
     </select>
     <label>보유 연차:</label>
     <input type="number" id="totalLeave" value="15" min="1" max="30">
-    <button onclick="prepareSuggestions()">추천 준비</button>
+    <button onclick="prepareSuggestions()">계산하기</button>
   </div>
 
   <div class="box" id="resultBox"></div>
-  <div class="box" id="calendarBox"></div>
-  <div class="box" id="summaryBox"></div>
 
   <script>
     const yearSelect = document.getElementById("year");
@@ -48,11 +47,21 @@
     const leaveDaysSelect = document.getElementById("leaveDays");
     const totalLeaveInput = document.getElementById("totalLeave");
     const resultBox = document.getElementById("resultBox");
-    const calendarBox = document.getElementById("calendarBox");
-    const summaryBox = document.getElementById("summaryBox");
 
     let suggestions = [];
     let suggestionIndex = 0;
+
+    const holidaysFixed = [
+      "1/1",  // 신정
+      "3/1",  // 삼일절
+      "5/1",  // 근로자의날
+      "5/5",  // 어린이날
+      "6/6",  // 현충일
+      "8/15", // 광복절
+      "10/3", // 개천절
+      "10/9", // 한글날
+      "12/25" // 성탄절
+    ];
 
     for (let y = 2024; y <= 2030; y++) {
       yearSelect.innerHTML += `<option value="${y}">${y}년</option>`;
@@ -63,9 +72,6 @@
 
     function prepareSuggestions() {
       resultBox.innerHTML = '';
-      calendarBox.innerHTML = '';
-      summaryBox.innerHTML = '';
-
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const leaveDays = parseInt(leaveDaysSelect.value);
@@ -117,14 +123,11 @@
           📝 필요한 연차: ${s.requiredLeave}일<br>
           <button class="copy-btn" onclick="copyText('${s.period}')">복사하기</button>
           <button class="share-btn" onclick="shareText('${s.period}')">공유하기</button>
-          <button class="next-btn" onclick="nextSuggestion()">다음 추천</button>
+          <button class="next-btn" onclick="nextSuggestion()">다른 추천 보기</button>
+          <div class="notice">※ 설날(구정)과 추석은 음력 명절로, 현재 달력에서는 별도 표기되지 않습니다.</div>
+          ${drawCalendar(s)}
         </div>
       `;
-
-      drawCalendar(s);
-
-      const totalLeave = parseInt(totalLeaveInput.value);
-      summaryBox.innerHTML = `<p>✅ 사용 연차: ${s.usedLeave}일 | 🧮 남은 연차: ${totalLeave - s.usedLeave}일</p>`;
     }
 
     function nextSuggestion() {
@@ -151,8 +154,6 @@
     }
 
     function drawCalendar(suggestion) {
-      calendarBox.innerHTML = '';
-
       const year = suggestion.leaveStart.getFullYear();
       const month = suggestion.leaveStart.getMonth() + 1;
       const firstDay = new Date(year, month - 1, 1).getDay();
@@ -165,20 +166,22 @@
       while (day <= daysInMonth) {
         if ((firstDay + day - 1) % 7 === 0) html += '</tr><tr>';
         const currentDate = new Date(year, month - 1, day);
+        let dateString = `${currentDate.getMonth() + 1}/${currentDate.getDate()}`;
+
         let className = '';
-        if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
-          className = 'holiday'; // 기본 주말 빨간색
+        if (currentDate.getDay() === 0 || currentDate.getDay() === 6 || holidaysFixed.includes(dateString)) {
+          className = 'holiday'; // 주말/공휴일 빨간색
         }
         if (currentDate >= suggestion.leaveStart && currentDate <= suggestion.leaveEnd) {
-          if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-            className = 'leave'; // 연차 사용
+          if (!(currentDate.getDay() === 0 || currentDate.getDay() === 6 || holidaysFixed.includes(dateString))) {
+            className = 'leave'; // 연차 사용은 파란색
           }
         }
         html += `<td class="${className}">${day}</td>`;
         day++;
       }
       html += '</tr></table>';
-      calendarBox.innerHTML = html;
+      return html;
     }
   </script>
 </body>
