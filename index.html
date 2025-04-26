@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2025 직장인 필수 툴 | 최장 연휴 시뮬레이터</title>
+  <title>2025 직장인 필수 툴 | 최장 연휴 추천 리스트</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; padding: 20px; max-width: 960px; margin: auto; }
     select, button, input { padding: 10px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
@@ -11,15 +11,13 @@
     .card { background: #fcfcfc; border-left: 5px solid #2ecc71; margin-bottom: 10px; padding: 15px; border-radius: 6px; }
     .copy-btn, .share-btn, .next-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
     .copy-btn:hover, .share-btn:hover, .next-btn:hover { background: #2c80b4; }
-    table.calendar { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    table.calendar th, table.calendar td { width: 14%; border: 1px solid #ccc; padding: 8px; text-align: center; color: black; }
-    .calendar th:first-child { color: red; }
-    .calendar th:last-child { color: blue; }
+    ul { padding-left: 20px; }
+    .holiday { color: red; font-weight: bold; }
     .notice { font-size: 0.9em; color: #888; margin: 10px 0; }
   </style>
 </head>
 <body>
-  <h1>2025 직장인 필수 툴 | 최장 연휴 시뮬레이터</h1>
+  <h1>2025 직장인 필수 툴 | 최장 연휴 추천 리스트</h1>
   <p>공휴일과 주말을 조합하여 최장 연휴를 만드는 연차 전략을 추천합니다!</p>
 
   <div class="box">
@@ -48,15 +46,27 @@
     const totalLeaveInput = document.getElementById("totalLeave");
     const resultBox = document.getElementById("resultBox");
 
-    let suggestions = [];
-    let suggestionIndex = 0;
+    const holidays = {
+      "01-01": "신정",
+      "03-01": "삼일절",
+      "05-01": "근로자의 날",
+      "05-05": "어린이날",
+      "06-06": "현충일",
+      "08-15": "광복절",
+      "10-03": "개천절",
+      "10-09": "한글날",
+      "12-25": "성탄절"
+    };
 
-    for (let y = 2024; y <= 2030; y++) {
+    for (let y = 2024; y <= 2040; y++) {
       yearSelect.innerHTML += `<option value="${y}">${y}년</option>`;
     }
     for (let m = 1; m <= 12; m++) {
       monthSelect.innerHTML += `<option value="${m}">${m}월</option>`;
     }
+
+    let suggestions = [];
+    let suggestionIndex = 0;
 
     function prepareSuggestions() {
       resultBox.innerHTML = '';
@@ -112,14 +122,38 @@
           <b>추천 ${suggestionIndex + 1}:</b><br>
           📅 기간: ${s.period}<br>
           🛌 쉬는 일수: ${s.totalDays}일<br>
-          📝 필요한 연차: ${s.requiredLeave}일<br>
+          📝 필요한 연차: ${s.requiredLeave}일<br><br>
+          <b>추천 쉬는 날짜:</b>
+          <ul>
+            ${generateDaysList(s)}
+          </ul>
           <button class="copy-btn" onclick="copyText('${s.period}')">복사하기</button>
           <button class="share-btn" onclick="shareText('${s.period}')">공유하기</button>
           <button class="next-btn" onclick="nextSuggestion()">다른 추천 보기</button>
-          <p class="notice">※ 설날(구정)과 추석은 음력 명절로, 현재 계산기에서는 양력 변환이 적용되지 않아 달력에 별도로 표기되지 않습니다.</p>
-          ${drawCalendar(s)}
+          <p class="notice">※ 설날(구정)과 추석은 음력 명절로, 현재 계산기에서는 양력 변환이 적용되지 않아 별도 표기되지 않습니다.</p>
         </div>
       `;
+    }
+
+    function generateDaysList(suggestion) {
+      const list = [];
+      const current = new Date(suggestion.leaveStart);
+      const end = new Date(suggestion.leaveEnd);
+
+      while (current <= end) {
+        const month = String(current.getMonth() + 1).padStart(2, '0');
+        const day = String(current.getDate()).padStart(2, '0');
+        const key = `${month}-${day}`;
+        let label = `${current.getFullYear()}-${month}-${day}`;
+
+        if (holidays[key]) {
+          label += ` <span class="holiday">(${holidays[key]})</span>`;
+        }
+
+        list.push(`<li>${label}</li>`);
+        current.setDate(current.getDate() + 1);
+      }
+      return list.join('');
     }
 
     function nextSuggestion() {
@@ -143,31 +177,6 @@
       } else {
         alert('현재 브라우저는 공유를 지원하지 않습니다.');
       }
-    }
-
-    function drawCalendar(suggestion) {
-      const year = suggestion.leaveStart.getFullYear();
-      const month = suggestion.leaveStart.getMonth() + 1;
-      const firstDay = new Date(year, month - 1, 1).getDay();
-      const daysInMonth = new Date(year, month, 0).getDate();
-
-      let html = '<table class="calendar"><tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr><tr>';
-      let day = 1;
-      for (let i = 0; i < firstDay; i++) html += '<td></td>';
-
-      while (day <= daysInMonth) {
-        if ((firstDay + day - 1) % 7 === 0) html += '</tr><tr>';
-        const currentDate = new Date(year, month - 1, day);
-
-        if (currentDate >= suggestion.leaveStart && currentDate <= suggestion.leaveEnd) {
-          html += `<td>★${day}</td>`;
-        } else {
-          html += `<td>${day}</td>`;
-        }
-        day++;
-      }
-      html += '</tr></table>';
-      return html;
     }
   </script>
 </body>
