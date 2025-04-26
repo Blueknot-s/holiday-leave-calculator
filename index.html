@@ -8,7 +8,6 @@
     body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; padding: 20px; max-width: 960px; margin: auto; }
     select, button, input { padding: 10px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
     .box { background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 20px; margin-top: 20px; }
-    .highlight { color: #d9534f; font-weight: bold; }
     .card { background: #fcfcfc; border-left: 5px solid #2ecc71; margin-bottom: 10px; padding: 15px; border-radius: 6px; }
     .copy-btn, .share-btn, .calendar-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
     .copy-btn:hover, .share-btn:hover, .calendar-btn:hover { background: #2c80b4; }
@@ -111,9 +110,10 @@
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
 
-      // ✅ 선택할 때마다 기존 달력 초기화
+      // ✅ 달력 완전 리셋
       calendarBox.innerHTML = '';
 
+      // ✅ 새 달력 그리기
       drawCalendar(year, month, suggestions[index]);
 
       const totalLeave = parseInt(totalLeaveInput.value);
@@ -151,9 +151,9 @@
         let className = '';
         if (currentDate >= suggestion.leaveStart && currentDate <= suggestion.leaveEnd) {
           if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
-            className = 'holiday'; // 쉬는 날 (빨간색)
+            className = 'holiday'; // 쉬는 날(빨간색)
           } else {
-            className = 'leave'; // 연차 사용 (파란색)
+            className = 'leave'; // 연차 사용(파란색)
           }
         }
         html += `<td class="${className}">${day}</td>`;
