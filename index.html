@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2025 직장인 필수 툴 | 최장 연휴 추천 리스트</title>
+  <title>2025 직장인 필수 툴 | 최장 연휴 추천</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; padding: 20px; max-width: 960px; margin: auto; }
     select, button, input { padding: 10px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
@@ -11,13 +11,11 @@
     .card { background: #fcfcfc; border-left: 5px solid #2ecc71; margin-bottom: 10px; padding: 15px; border-radius: 6px; }
     .copy-btn, .share-btn, .next-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
     .copy-btn:hover, .share-btn:hover, .next-btn:hover { background: #2c80b4; }
-    ul { padding-left: 20px; }
-    .holiday { color: red; font-weight: bold; }
-    .notice { font-size: 0.9em; color: #888; margin: 10px 0; }
+    .notice { font-size: 0.9em; color: #888; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h1>2025 직장인 필수 툴 | 최장 연휴 추천 리스트</h1>
+  <h1>2025 직장인 필수 툴 | 최장 연휴 추천</h1>
   <p>공휴일과 주말을 조합하여 최장 연휴를 만드는 연차 전략을 추천합니다!</p>
 
   <div class="box">
@@ -45,18 +43,6 @@
     const leaveDaysSelect = document.getElementById("leaveDays");
     const totalLeaveInput = document.getElementById("totalLeave");
     const resultBox = document.getElementById("resultBox");
-
-    const holidays = {
-      "01-01": "신정",
-      "03-01": "삼일절",
-      "05-01": "근로자의 날",
-      "05-05": "어린이날",
-      "06-06": "현충일",
-      "08-15": "광복절",
-      "10-03": "개천절",
-      "10-09": "한글날",
-      "12-25": "성탄절"
-    };
 
     for (let y = 2024; y <= 2040; y++) {
       yearSelect.innerHTML += `<option value="${y}">${y}년</option>`;
@@ -121,37 +107,12 @@
           📅 기간: ${s.period}<br>
           🛌 쉬는 일수: ${s.totalDays}일<br>
           📝 필요한 연차: ${s.requiredLeave}일<br><br>
-          <b>추천 쉬는 날짜:</b>
-          <ul>
-            ${generateDaysList(s)}
-          </ul>
           <button class="copy-btn" onclick="copyText('${s.period}')">복사하기</button>
           <button class="share-btn" onclick="shareText('${s.period}')">공유하기</button>
           <button class="next-btn" onclick="nextSuggestion()">다른 추천 보기</button>
           <p class="notice">※ 설날(구정)과 추석은 음력 명절로, 현재 계산기에서는 양력 변환이 적용되지 않아 별도 표기되지 않습니다.</p>
         </div>
       `;
-    }
-
-    function generateDaysList(suggestion) {
-      const list = [];
-      const current = new Date(suggestion.leaveStart);
-      const end = new Date(suggestion.leaveEnd);
-
-      while (current <= end) {
-        const month = String(current.getMonth() + 1).padStart(2, '0');
-        const day = String(current.getDate()).padStart(2, '0');
-        const key = `${month}-${day}`;
-        let label = `${current.getFullYear()}-${month}-${day}`;
-
-        if (holidays[key]) {
-          label += ` <span class="holiday">(${holidays[key]})</span>`;
-        }
-
-        list.push(`<li>${label}</li>`);
-        current.setDate(current.getDate() + 1);
-      }
-      return list.join('');
     }
 
     function formatDate(date) {
