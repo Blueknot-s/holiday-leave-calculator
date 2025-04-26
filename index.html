@@ -3,35 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>공휴일·주말 계산기 + 연차 추천기</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>2025 직장인 필수 툴 | 최장 연휴 시뮬레이터</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; padding: 20px; max-width: 960px; margin: auto; }
     select, button, input { padding: 10px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
     .box { background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 20px; margin-top: 20px; }
     .highlight { color: #d9534f; font-weight: bold; }
-    .card { background: #fcfcfc; border-left: 4px solid #2ecc71; margin-bottom: 10px; padding: 10px 15px; border-radius: 6px; }
-    .copy-btn, .download-btn, .ics-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    .copy-btn:hover, .download-btn:hover, .ics-btn:hover { background: #2c80b4; }
+    .card { background: #fcfcfc; border-left: 5px solid #2ecc71; margin-bottom: 10px; padding: 15px; border-radius: 6px; }
+    .copy-btn, .share-btn { margin-top: 10px; padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .copy-btn:hover, .share-btn:hover { background: #2c80b4; }
     ul { padding-left: 20px; }
   </style>
 </head>
 <body>
-  <h2>2025 공휴일·주말 계산기 + 연차 추천 + 일정 저장</h2>
-  
+  <h1>2025 직장인 필수 툴 | 최장 연휴 시뮬레이터</h1>
+  <p>공휴일과 주말을 조합하여 최장 연휴를 만드는 연차 전략을 추천합니다!</p>
+
   <div class="box">
-    <label>연도:</label><select id="year"></select>
-    <label>월:</label><select id="month"><option value="0">전체 연도</option></select>
-    <label>연차 사용:</label><select id="leaveDays">
-      <option value="0">선택</option><option value="1">1일</option><option value="2">2일</option><option value="3">3일</option><option value="4">4일</option><option value="5">5일</option>
+    <label>연도:</label>
+    <select id="year"></select>
+    <label>월:</label>
+    <select id="month"><option value="0">전체 연도</option></select>
+    <label>연차 사용:</label>
+    <select id="leaveDays">
+      <option value="0">선택</option>
+      <option value="1">1일</option>
+      <option value="2">2일</option>
+      <option value="3">3일</option>
     </select>
-    <label>보유 연차:</label><input type="number" id="totalLeave" value="15" min="1" max="30">
-    <button onclick="calculateDays()">계산하기</button>
+    <label>보유 연차:</label>
+    <input type="number" id="totalLeave" value="15" min="1" max="30">
+    <button onclick="calculateDays()">최장 연휴 계산하기</button>
   </div>
 
   <div class="box" id="resultBox"></div>
-  <div class="box" id="simBox"></div>
 
   <script>
     const yearSelect = document.getElementById("year");
@@ -39,7 +45,6 @@
     const leaveDaysSelect = document.getElementById("leaveDays");
     const totalLeaveInput = document.getElementById("totalLeave");
     const resultBox = document.getElementById("resultBox");
-    const simBox = document.getElementById("simBox");
 
     for (let y = 2024; y <= 2030; y++) {
       yearSelect.innerHTML += `<option value="${y}">${y}년</option>`;
@@ -53,55 +58,69 @@
       const month = parseInt(monthSelect.value);
       const leaveDays = parseInt(leaveDaysSelect.value);
       const totalLeave = parseInt(totalLeaveInput.value);
+
+      let holidays = [];
       let current = new Date(year, month > 0 ? month - 1 : 0, 1);
       const end = new Date(year, month > 0 ? month : 12, 0);
-      let simResults = [];
 
       while (current <= end) {
-        const day = current.getDay();
-        const isFri = day === 5, isMon = day === 1;
-        if (isFri || isMon) {
-          const before = new Date(current);
-          const after = new Date(current);
-          if (isFri) after.setDate(after.getDate() + 2);
-          if (isMon) before.setDate(before.getDate() - 2);
-          simResults.push({
-            type: isFri ? "금요일 연차" : "월요일 연차",
-            range: `${before.toLocaleDateString()} ~ ${after.toLocaleDateString()}`,
-            start: before.toISOString(),
-            title: isFri ? "금요일 연차 추천" : "월요일 연차 추천"
-          });
-        }
+        if (current.getDay() === 0 || current.getDay() === 6) { holidays.push(new Date(current)); }
         current.setDate(current.getDate() + 1);
       }
 
-      resultBox.innerHTML = `<p class='card'><strong>선택 연차:</strong> ${leaveDays}일 | <strong>잔여 연차:</strong> ${totalLeave - leaveDays}일</p>`;
+      resultBox.innerHTML = `<h3>연차 조합 추천</h3>`;
+      if (holidays.length === 0) {
+        resultBox.innerHTML += `<p>해당 기간에 추천할 공휴일/주말이 없습니다.</p>`;
+        return;
+      }
 
-      let simHTML = `<h3>연차 조합 시뮬레이션</h3><ul>`;
-      simResults.slice(0, leaveDays).forEach(sim => {
-        simHTML += `<li><b>${sim.type}</b>: ${sim.range} <button class='ics-btn' onclick='downloadICS("${sim.title}", "${sim.start}")'>일정 저장</button></li>`;
+      let suggestions = holidays.map(date => {
+        const before = new Date(date);
+        before.setDate(before.getDate() - 1);
+        const after = new Date(date);
+        after.setDate(after.getDate() + 1);
+
+        return {
+          period: `${before.toLocaleDateString()} ~ ${after.toLocaleDateString()}`,
+          totalDays: 3,
+          requiredLeave: 1
+        };
       });
-      simHTML += `</ul><button class='download-btn' onclick='downloadAsImage()'>이미지 저장</button>`;
-      simBox.innerHTML = simHTML;
+
+      suggestions = suggestions.filter(s => s.requiredLeave <= leaveDays && s.requiredLeave <= totalLeave);
+
+      suggestions.sort((a, b) => b.totalDays - a.totalDays);
+
+      suggestions.forEach((s, idx) => {
+        resultBox.innerHTML += `
+          <div class="card">
+            <b>추천 ${idx + 1}:</b><br>
+            📅 기간: ${s.period}<br>
+            🛌 쉬는 일수: ${s.totalDays}일<br>
+            📝 필요한 연차: ${s.requiredLeave}일<br>
+            <button class="copy-btn" onclick="copyText('${s.period} | 쉬는 일수 ${s.totalDays}일 | 연차 ${s.requiredLeave}일')">복사하기</button>
+            <button class="share-btn" onclick="shareText('${s.period} | 쉬는 일수 ${s.totalDays}일 | 연차 ${s.requiredLeave}일')">공유하기</button>
+          </div>
+        `;
+      });
     }
 
-    function downloadAsImage() {
-      html2canvas(document.body).then(canvas => {
-        const link = document.createElement('a');
-        link.download = '연차계산결과.png';
-        link.href = canvas.toDataURL();
-        link.click();
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('복사되었습니다!');
       });
     }
 
-    function downloadICS(title, start) {
-      const dtStart = start.replace(/[-:]/g, '').split('.')[0];
-      const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:${title}\nDTSTART:${dtStart}\nDTEND:${dtStart}\nEND:VEVENT\nEND:VCALENDAR`;
-      const blob = new Blob([ics], {type: 'text/calendar'});
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `${title}.ics`;
-      link.click();
+    function shareText(text) {
+      if (navigator.share) {
+        navigator.share({
+          title: '연차 추천 공유',
+          text: text,
+          url: window.location.href
+        });
+      } else {
+        alert('현재 브라우저는 공유를 지원하지 않습니다.');
+      }
     }
   </script>
 </body>
